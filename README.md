@@ -2,4 +2,9 @@
 
 - go backend
 - htmx frontend
-- sqlite database
+
+### Seed Postgres Database
+
+```bash
+go run cmd/dbseed/dbseed.go
+```
