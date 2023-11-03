@@ -28,7 +28,7 @@ func TestParseFirstLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			info := &baseInfo{}
+			info := &headerInfo{}
 			err := info.parseFirstLine([]byte(tt.line))
 			require.NoError(t, err)
 			assert.Equal(t, tt.holderType, info.HolderType)

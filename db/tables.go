@@ -1,23 +1,54 @@
 package db
 
-import "time"
+import (
+	"time"
+
+	"github.com/jmoiron/sqlx/types"
+)
+
+type HolderIdentifier struct {
+	Type       string
+	Identifier string
+}
 
 type CreateHolder struct {
-	Identifier string
-	Name       string
-	Data       any
+	HolderIdentifier
+	Name           string
+	ParentHolderID *int `db:"parent_holder_id"`
+	Data           types.NullJSONText
+	Favorite       bool
 }
 
-type Holder struct{}
+type Holder struct {
+	CreateHolder
+	ID        int
+	CreatedAt time.Time `db:"created_at"`
+}
+
+type BaseTransaction struct {
+	AmountInCents       int `db:"amount_in_cents"`
+	Timestamp           time.Time
+	Data                types.NullJSONText
+	ParentTransactionID *int `db:"parent_transaction_id"`
+}
 
 type CreateTransaction struct {
-	FromIdentifier string
-	ToIdentifier   string
-	AmountInCents  uint
-	Time           time.Time
-	Data           any
+	BaseTransaction
+	FromIdentifier HolderIdentifier
+	ToIdentifier   HolderIdentifier
 }
 
-type Transaction struct{}
+type Transaction struct {
+	BaseTransaction
+	ID           int
+	FromHolderID int       `db:"from_holder_id"`
+	ToHolderID   int       `db:"to_holder_id"`
+	CreatedAt    time.Time `db:"created_at"`
+}
 
-type Tag struct{}
+type Tag struct {
+	ID          int
+	Name        string
+	ParentTagID *int      `db:"parent_tag_id"`
+	CreatedAt   time.Time `db:"created_at"`
+}

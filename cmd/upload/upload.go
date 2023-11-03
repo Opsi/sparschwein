@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/Opsi/sparschwein/db"
@@ -33,6 +34,11 @@ func run() error {
 		dryRun       = flag.Bool("dry", false, "dry run the script without writing to db")
 	)
 	flag.Parse()
+	slog.Info("flags", slog.Group("flags",
+		slog.String("format", *formatString),
+		slog.String("file", *filePath),
+		slog.Bool("dry", *dryRun),
+	))
 
 	if err := logConfig.InitSlogDefault(); err != nil {
 		return fmt.Errorf("init slog: %w", err)
