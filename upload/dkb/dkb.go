@@ -15,7 +15,7 @@ import (
 var (
 	// first line has the form
 	//
-	// "Konto";"<ledger type> <iban>"
+	// "Konto";"<holder type> <iban>"
 	//
 	// we want to extract the type and the iban
 	firstLineRegex = regexp.MustCompile(`"Konto";"(.+) (.+)"`)
@@ -29,7 +29,7 @@ var (
 )
 
 type baseInfo struct {
-	LedgerType     string
+	HolderType     string
 	IBAN           string
 	Date           time.Time
 	BalanceInCents int
@@ -83,15 +83,15 @@ func (i *baseInfo) parseFirstLine(line []byte) error {
 	if len(matches) != 3 {
 		return fmt.Errorf("1st line does not match regex")
 	}
-	ledgerType := strings.TrimSpace(string(matches[1]))
-	if ledgerType == "" {
-		return fmt.Errorf("ledger type is empty")
+	holderType := strings.TrimSpace(string(matches[1]))
+	if holderType == "" {
+		return fmt.Errorf("holder type is empty")
 	}
 	iban := strings.TrimSpace(string(matches[2]))
 	if iban == "" {
 		return fmt.Errorf("iban is empty")
 	}
-	i.LedgerType = ledgerType
+	i.HolderType = holderType
 	i.IBAN = iban
 	return nil
 }

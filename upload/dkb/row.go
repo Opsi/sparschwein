@@ -55,18 +55,18 @@ func (t transactionCreator) Transaction() db.CreateTransaction {
 	}
 }
 
-func (t transactionCreator) FromLedger() db.CreateLedger {
+func (t transactionCreator) FromHolder() db.CreateHolder {
 	// TODO
-	return db.CreateLedger{
+	return db.CreateHolder{
 		Identifier: t.fromIdentifier(),
 		Name:       t.Row.Payer,
 		Data:       t,
 	}
 }
 
-func (t transactionCreator) ToLedger() db.CreateLedger {
+func (t transactionCreator) ToHolder() db.CreateHolder {
 	// TODO
-	return db.CreateLedger{
+	return db.CreateHolder{
 		Identifier: t.toIdentifier(),
 		Name:       t.Row.Payee,
 		Data:       t,

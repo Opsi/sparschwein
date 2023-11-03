@@ -1,21 +1,44 @@
 package util
 
 import (
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 )
 
-// InitSlogDefault initializes the default logger with the LOG_FORMAT and
-// LOG_LEVEL environment variables.
-func InitSlogDefault() error {
-	var (
-		format = LookupStringEnv("LOG_FORMAT", "text")
-		level  = LookupStringEnv("LOG_LEVEL", "info")
-	)
+// LogConfig holds the logging configuration values
+type LogConfig struct {
+	// Format of the log messages (json or text)
+	Format string
+	// Level of the log messages (debug, info, warn, error)
+	Level string
+}
+
+// AddLogFlags adds the logging flags and returns the configuration struct to
+// be filled with the values from the flags.
+func AddLogFlags() *LogConfig {
+	logConfig := &LogConfig{}
+
+	flag.StringVar(
+		&logConfig.Format,
+		"log-format",
+		LookupStringEnv("LOG_FORMAT", "text"),
+		"Set the logging format (json or text)")
+	flag.StringVar(
+		&logConfig.Level,
+		"log-level",
+		LookupStringEnv("LOG_LEVEL", "info"),
+		"Set the logging level (debug, info, warn, error)")
+
+	return logConfig
+}
+
+// InitSlogDefault initializes the default logger with the given configuration.
+func (c LogConfig) InitSlogDefault() error {
 	var leveler slog.Leveler
-	switch strings.ToLower(level) {
+	switch strings.ToLower(c.Level) {
 	case "debug":
 		leveler = slog.LevelDebug
 	case "info":
@@ -25,11 +48,11 @@ func InitSlogDefault() error {
 	case "error":
 		leveler = slog.LevelError
 	default:
-		return fmt.Errorf("unknown log level %q", level)
+		return fmt.Errorf("unknown log level %q", c.Level)
 	}
 
 	var handler slog.Handler
-	switch strings.ToLower(format) {
+	switch strings.ToLower(c.Format) {
 	case "json":
 		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: leveler,
@@ -39,7 +62,7 @@ func InitSlogDefault() error {
 			Level: leveler,
 		})
 	default:
-		return fmt.Errorf("unknown log format %q", format)
+		return fmt.Errorf("unknown log format %q", c.Format)
 	}
 	slog.SetDefault(slog.New(handler))
 	return nil

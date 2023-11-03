@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Opsi/sparschwein/db"
 	"github.com/Opsi/sparschwein/upload"
 	"github.com/Opsi/sparschwein/upload/dkb"
+	"github.com/Opsi/sparschwein/util"
 	"github.com/joho/godotenv"
 )
 
@@ -23,13 +25,18 @@ func run() error {
 	}
 
 	// flags
-	// TODO: add flag/env set for the postgres connection
+	logConfig := util.AddLogFlags()
+	_ = db.AddFlags()
 	var (
-		formatString = flag.String("format", "dkb", "what format to use")
-		filePath     = flag.String("file", "", "path to file")
+		formatString = flag.String("format", "dkb", "what format the csv file is in")
+		filePath     = flag.String("file", "", "path to the csv file")
 		dryRun       = flag.Bool("dry", false, "dry run the script without writing to db")
 	)
 	flag.Parse()
+
+	if err := logConfig.InitSlogDefault(); err != nil {
+		return fmt.Errorf("init slog: %w", err)
+	}
 
 	// validate flags
 	if *filePath == "" {
@@ -56,15 +63,15 @@ func run() error {
 
 	if *dryRun {
 		// this is a dry run, so we just print the transactions
-		// and ledgers that would be created
+		// and holders that would be created
 		for _, creator := range creators {
 			fmt.Printf("Transaction: %v\n", creator.Transaction())
-			fmt.Printf("From Ledger: %v\n", creator.FromLedger())
-			fmt.Printf("To Ledger: %v\n", creator.ToLedger())
+			fmt.Printf("From Holder: %v\n", creator.FromHolder())
+			fmt.Printf("To Holder: %v\n", creator.ToHolder())
 		}
 	} else {
 		// this is not a dry run, so we create the transactions
-		// and ledgers
+		// and holders
 		return fmt.Errorf("not implemented")
 	}
 	return nil

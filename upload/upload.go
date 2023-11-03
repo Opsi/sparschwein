@@ -6,6 +6,6 @@ import (
 
 type TransactionCreator interface {
 	Transaction() db.CreateTransaction
-	FromLedger() db.CreateLedger
-	ToLedger() db.CreateLedger
+	FromHolder() db.CreateHolder
+	ToHolder() db.CreateHolder
 }

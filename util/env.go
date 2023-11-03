@@ -1,6 +1,7 @@
 package util
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 )
@@ -20,6 +21,7 @@ func LookupIntEnv(key string, fallback int) int {
 	}
 	asInt, err := strconv.Atoi(value)
 	if err != nil {
+		slog.Warn("Could not parse environment variable %s as int: %s", key, err)
 		return fallback
 	}
 	return asInt

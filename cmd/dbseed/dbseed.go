@@ -3,10 +3,12 @@ package main
 import (
 	"database/sql"
 	"embed"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/Opsi/sparschwein/db"
 	"github.com/Opsi/sparschwein/util"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
@@ -26,16 +28,15 @@ func run() error {
 	if err := godotenv.Load(); err != nil {
 		return fmt.Errorf("load .env: %w", err)
 	}
-	if err := util.InitSlogDefault(); err != nil {
-		return fmt.Errorf("init slog default: %w", err)
+
+	// init and parse flags
+	logConfig := util.AddLogFlags()
+	dbConfig := db.AddFlags()
+	flag.Parse()
+
+	if err := logConfig.InitSlogDefault(); err != nil {
+		return fmt.Errorf("init slog: %w", err)
 	}
-	var (
-		host     = util.LookupStringEnv("DB_HOST", "localhost")
-		port     = util.LookupIntEnv("DB_PORT", 5432)
-		user     = util.LookupStringEnv("DB_USER", "postgres")
-		password = util.LookupStringEnv("DB_PASSWORD", "postgres")
-		dbname   = util.LookupStringEnv("DB_NAME", "sparschwein")
-	)
 
 	seedData, err := seedFile.ReadFile("seed.sql")
 	if err != nil {
@@ -44,9 +45,9 @@ func run() error {
 
 	// Construct the connection string.
 	// SSL mode 'disable' is not recommended for production use.
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	psqlInfo := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.Database)
 
 	// Open the connection
 	db, err := sql.Open("postgres", psqlInfo)
