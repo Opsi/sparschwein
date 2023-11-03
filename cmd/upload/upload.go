@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 
 	"github.com/Opsi/sparschwein/db"
 	"github.com/Opsi/sparschwein/upload"
@@ -28,7 +30,7 @@ func run() error {
 
 	// flags
 	logConfig := util.AddLogFlags()
-	_ = db.AddFlags()
+	dbConfig := db.AddFlags()
 	var (
 		formatString = flag.String("format", "dkb", "what format the csv file is in")
 		filePath     = flag.String("file", "", "path to the csv file")
@@ -47,6 +49,9 @@ func run() error {
 	if err := logConfig.InitSlogDefault(); err != nil {
 		return fmt.Errorf("init slog: %w", err)
 	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
 	// validate flags
 	if *filePath == "" {
@@ -106,7 +111,40 @@ func run() error {
 	} else {
 		// this is not a dry run, so we create the transactions
 		// and holders
-		return fmt.Errorf("not implemented")
+		dbConn, err := dbConfig.Open()
+		if err != nil {
+			return fmt.Errorf("open connection: %w", err)
+		}
+		defer dbConn.Close()
+
+		// Check the connection
+		err = dbConn.Ping()
+		if err != nil {
+			return fmt.Errorf("ping db: %w", err)
+		}
+
+		slog.Info("successfully connected")
+
+		for _, creator := range creators {
+			transaction := creator.Transaction()
+			fromHolder, err := db.GetHolderByIdentifier(ctx, dbConn, transaction.FromIdentifier)
+			if err != nil {
+				fromHolder, err = db.InsertHolder(ctx, dbConn, creator.FromHolder())
+				if err != nil {
+					return fmt.Errorf("insert from holder: %w", err)
+				}
+			}
+			toHolder, err := db.GetHolderByIdentifier(ctx, dbConn, transaction.ToIdentifier)
+			if err != nil {
+				toHolder, err = db.InsertHolder(ctx, dbConn, creator.ToHolder())
+				if err != nil {
+					return fmt.Errorf("insert to holder: %w", err)
+				}
+			}
+			slog.Debug("inserting transaction", slog.Group("transaction",
+				slog.String("from", fromHolder.Name),
+				slog.String("to", toHolder.Name)))
+		}
 	}
 	return nil
 }

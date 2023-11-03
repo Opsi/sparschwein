@@ -2,8 +2,11 @@ package db
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/Opsi/sparschwein/util"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 // Config holds the database configuration values
@@ -52,4 +55,14 @@ func AddFlags() *Config {
 		"Database name (default: sparschwein)")
 
 	return dbConfig
+}
+
+func (c Config) Open() (*sqlx.DB, error) {
+	// Construct the connection string.
+	// SSL mode 'disable' is not recommended for production use.
+	dataSourceName := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		c.Host, c.Port, c.User, c.Password, c.Database)
+
+	return sqlx.Open("postgres", dataSourceName)
 }

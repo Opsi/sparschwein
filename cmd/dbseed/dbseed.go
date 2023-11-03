@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"embed"
 	"flag"
 	"fmt"
@@ -43,28 +42,21 @@ func run() error {
 		return fmt.Errorf("read seed file: %w", err)
 	}
 
-	// Construct the connection string.
-	// SSL mode 'disable' is not recommended for production use.
-	psqlInfo := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.Database)
-
-	// Open the connection
-	db, err := sql.Open("postgres", psqlInfo)
+	dbConn, err := dbConfig.Open()
 	if err != nil {
 		return fmt.Errorf("open connection: %w", err)
 	}
-	defer db.Close()
+	defer dbConn.Close()
 
 	// Check the connection
-	err = db.Ping()
+	err = dbConn.Ping()
 	if err != nil {
 		return fmt.Errorf("ping db: %w", err)
 	}
 
 	slog.Info("successfully connected")
 
-	_, err = db.Exec(string(seedData))
+	_, err = dbConn.Exec(string(seedData))
 	if err != nil {
 		return fmt.Errorf("exec seed script: %w", err)
 	}
