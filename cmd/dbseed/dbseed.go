@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
-	"io/fs"
 	"log/slog"
 	"os"
 
@@ -38,7 +37,7 @@ func run() error {
 		dbname   = util.LookupStringEnv("DB_NAME", "sparschwein")
 	)
 
-	seedData, err := fs.ReadFile(seedFile, "seed.sql")
+	seedData, err := seedFile.ReadFile("seed.sql")
 	if err != nil {
 		return fmt.Errorf("read seed file: %w", err)
 	}
