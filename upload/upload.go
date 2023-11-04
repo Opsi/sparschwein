@@ -5,7 +5,7 @@ import (
 )
 
 type TransactionCreator interface {
-	Transaction() db.CreateTransaction
+	Transaction() db.BaseTransaction
 	FromHolder() db.CreateHolder
 	ToHolder() db.CreateHolder
 }

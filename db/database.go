@@ -57,12 +57,16 @@ func AddFlags() *Config {
 	return dbConfig
 }
 
-func (c Config) Open() (*sqlx.DB, error) {
+func (c Config) OpenPingedConnection() (*sqlx.DB, error) {
 	// Construct the connection string.
 	// SSL mode 'disable' is not recommended for production use.
 	dataSourceName := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		c.Host, c.Port, c.User, c.Password, c.Database)
 
-	return sqlx.Open("postgres", dataSourceName)
+	conn, err := sqlx.Connect("postgres", dataSourceName)
+	if err != nil {
+		return nil, fmt.Errorf("connect: %w", err)
+	}
+	return conn, nil
 }

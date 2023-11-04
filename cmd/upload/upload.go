@@ -13,6 +13,7 @@ import (
 	"github.com/Opsi/sparschwein/upload"
 	"github.com/Opsi/sparschwein/upload/dkb"
 	"github.com/Opsi/sparschwein/util"
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 )
 
@@ -76,74 +77,66 @@ func run() error {
 		return fmt.Errorf("parse csv: %w", err)
 	}
 
+	// connect to db
+	dbConn, err := dbConfig.OpenPingedConnection()
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer dbConn.Close()
+
+	dryRunResult, err := upload.DryRun(ctx, dbConn, creators)
+	if err != nil {
+		return fmt.Errorf("dry run: %w", err)
+	}
+	slog.Debug("dry run result", slog.Group("result",
+		slog.Int("existingHolders", len(dryRunResult.ExistingHolders)),
+		slog.Int("holdersToCreate", len(dryRunResult.HoldersToCreate)),
+		slog.Int("transactions", len(dryRunResult.Transactions)),
+	))
+
 	if *dryFilePath != "" {
-		// this is a dry run, so we just print the transactions
-		// and holders that would be created
-		// TODO: actually check which holders and transactions already exist
-		holderMap := make(map[db.HolderIdentifier]db.CreateHolder)
-		transactions := make([]db.CreateTransaction, 0)
-		for _, creator := range creators {
-			transaction := creator.Transaction()
-			transactions = append(transactions, transaction)
-			fromHolder := creator.FromHolder()
-			toHolder := creator.ToHolder()
-			holderMap[fromHolder.HolderIdentifier] = fromHolder
-			holderMap[toHolder.HolderIdentifier] = toHolder
-		}
-		holders := make([]db.CreateHolder, 0)
-		for _, holder := range holderMap {
-			holders = append(holders, holder)
-		}
-		jsonData := struct {
-			Holders      []db.CreateHolder      `json:"holders"`
-			Transactions []db.CreateTransaction `json:"transactions"`
-		}{
-			Holders:      holders,
-			Transactions: transactions,
-		}
-		jsonBytes, err := json.Marshal(jsonData)
+		// this is a dry run, so we just save the result to the json file
+		jsonBytes, err := json.Marshal(dryRunResult)
 		if err != nil {
-			return fmt.Errorf("marshal json: %w", err)
+			return fmt.Errorf("json marshal dry run result: %w", err)
 		}
 		if err := os.WriteFile(*dryFilePath, jsonBytes, 0644); err != nil {
 			return fmt.Errorf("write json file: %w", err)
 		}
-	} else {
-		// this is not a dry run, so we create the transactions
-		// and holders
-		dbConn, err := dbConfig.Open()
-		if err != nil {
-			return fmt.Errorf("open connection: %w", err)
+		return nil
+	}
+
+	return nonDryRun(ctx, dbConn, dryRunResult)
+}
+
+func nonDryRun(ctx context.Context,
+	dbConn sqlx.ExtContext,
+	result *upload.DryRunResult) error {
+
+	err := result.InsertHolders(ctx, dbConn)
+	if err != nil {
+		return fmt.Errorf("insert holders: %w", err)
+	}
+
+	for _, transaction := range result.Transactions {
+		fromHolder, ok := result.ExistingHolders[transaction.FromIdentifier]
+		if !ok {
+			return fmt.Errorf("from holder not found")
 		}
-		defer dbConn.Close()
-
-		// Check the connection
-		err = dbConn.Ping()
-		if err != nil {
-			return fmt.Errorf("ping db: %w", err)
+		toHolder, ok := result.ExistingHolders[transaction.ToIdentifier]
+		if !ok {
+			return fmt.Errorf("to holder not found")
 		}
 
-		slog.Info("successfully connected")
+		create := db.CreateTransaction{
+			BaseTransaction: transaction.Transaction,
+			FromHolderID:    fromHolder.ID,
+			ToHolderID:      toHolder.ID,
+		}
 
-		for _, creator := range creators {
-			transaction := creator.Transaction()
-			fromHolder, err := db.GetHolderByIdentifier(ctx, dbConn, transaction.FromIdentifier)
-			if err != nil {
-				fromHolder, err = db.InsertHolder(ctx, dbConn, creator.FromHolder())
-				if err != nil {
-					return fmt.Errorf("insert from holder: %w", err)
-				}
-			}
-			toHolder, err := db.GetHolderByIdentifier(ctx, dbConn, transaction.ToIdentifier)
-			if err != nil {
-				toHolder, err = db.InsertHolder(ctx, dbConn, creator.ToHolder())
-				if err != nil {
-					return fmt.Errorf("insert to holder: %w", err)
-				}
-			}
-			slog.Debug("inserting transaction", slog.Group("transaction",
-				slog.String("from", fromHolder.Name),
-				slog.String("to", toHolder.Name)))
+		_, err = db.InsertTransaction(ctx, dbConn, create)
+		if err != nil {
+			return fmt.Errorf("insert transaction: %w", err)
 		}
 	}
 	return nil

@@ -42,25 +42,19 @@ func run() error {
 		return fmt.Errorf("read seed file: %w", err)
 	}
 
-	dbConn, err := dbConfig.Open()
+	dbConn, err := dbConfig.OpenPingedConnection()
 	if err != nil {
-		return fmt.Errorf("open connection: %w", err)
+		return fmt.Errorf("open database: %w", err)
 	}
 	defer dbConn.Close()
 
-	// Check the connection
-	err = dbConn.Ping()
-	if err != nil {
-		return fmt.Errorf("ping db: %w", err)
-	}
-
-	slog.Info("successfully connected")
+	slog.Info("successfully connected to database")
 
 	_, err = dbConn.Exec(string(seedData))
 	if err != nil {
 		return fmt.Errorf("exec seed script: %w", err)
 	}
 
-	slog.Info("successfully seeded")
+	slog.Info("successfully seeded database")
 	return nil
 }

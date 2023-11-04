@@ -1,6 +1,7 @@
 package db
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/jmoiron/sqlx/types"
@@ -9,6 +10,13 @@ import (
 type HolderIdentifier struct {
 	Type       string
 	Identifier string
+}
+
+func (h HolderIdentifier) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("type", h.Type),
+		slog.String("identifier", h.Identifier),
+	)
 }
 
 type CreateHolder struct {
@@ -26,7 +34,7 @@ type Holder struct {
 }
 
 type BaseTransaction struct {
-	AmountInCents       int `db:"amount_in_cents"`
+	AmountInCents       int `db:"amount"`
 	Timestamp           time.Time
 	Data                types.NullJSONText
 	ParentTransactionID *int `db:"parent_transaction_id"`
@@ -34,16 +42,14 @@ type BaseTransaction struct {
 
 type CreateTransaction struct {
 	BaseTransaction
-	FromIdentifier HolderIdentifier
-	ToIdentifier   HolderIdentifier
+	FromHolderID int `db:"from_holder_id"`
+	ToHolderID   int `db:"to_holder_id"`
 }
 
 type Transaction struct {
-	BaseTransaction
-	ID           int
-	FromHolderID int       `db:"from_holder_id"`
-	ToHolderID   int       `db:"to_holder_id"`
-	CreatedAt    time.Time `db:"created_at"`
+	CreateTransaction
+	ID        int
+	CreatedAt time.Time `db:"created_at"`
 }
 
 type Tag struct {

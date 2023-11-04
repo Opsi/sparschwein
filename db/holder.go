@@ -2,26 +2,27 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
 )
 
-func GetHolderByIdentifier(ctx context.Context, db sqlx.QueryerContext, identifier HolderIdentifier) (Holder, error) {
+func GetHolderByIdentifier(ctx context.Context, db sqlx.QueryerContext, identifier HolderIdentifier) (*Holder, bool, error) {
 	var holder Holder
-	err := sqlx.GetContext(ctx,
-		db,
-		&holder,
-		`SELECT * FROM holders WHERE type = $1 AND identifier = $2`,
-		identifier.Type,
-		identifier.Identifier)
-	if err != nil {
-		return Holder{}, fmt.Errorf("get holder by identifier: %w", err)
+	const query = "SELECT * FROM holders WHERE type = $1 AND identifier = $2"
+	err := sqlx.GetContext(ctx, db, &holder, query, identifier.Type, identifier.Identifier)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, false, nil
 	}
-	return holder, nil
+	if err != nil {
+		return nil, false, fmt.Errorf("select holder: %w", err)
+	}
+	return &holder, true, nil
 }
 
-func InsertHolder(ctx context.Context, db sqlx.ExtContext, createHolder CreateHolder) (Holder, error) {
+func InsertHolder(ctx context.Context, db sqlx.ExtContext, createHolder CreateHolder) (*Holder, error) {
 	query := `
 		INSERT INTO holders
 			(type, identifier, name, parent_holder_id, data, favorite)
@@ -29,17 +30,18 @@ func InsertHolder(ctx context.Context, db sqlx.ExtContext, createHolder CreateHo
 			RETURNING *`
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, createHolder)
 	if err != nil {
-		return Holder{}, err
+		return nil, err
 	}
+	defer rows.Close()
 
 	// Assuming your INSERT statement returns the newly created holder
 	if !rows.Next() {
-		return Holder{}, fmt.Errorf("no holder returned")
+		return nil, fmt.Errorf("no holder returned")
 	}
 	var holder Holder
 	err = rows.StructScan(&holder)
 	if err != nil {
-		return Holder{}, fmt.Errorf("struct scan: %w", err)
+		return nil, fmt.Errorf("struct scan: %w", err)
 	}
-	return holder, nil
+	return &holder, nil
 }
