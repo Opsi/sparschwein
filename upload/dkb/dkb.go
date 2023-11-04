@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
@@ -82,7 +83,10 @@ func parseRows(reader *bufio.Reader) ([]csvRow, error) {
 
 		row, err := parseRow(record)
 		if err != nil {
-			return nil, fmt.Errorf("parse record %d: %w", recordCount, err)
+			slog.Warn("skipping record because of error",
+				slog.Any("record", record),
+				slog.String("error", err.Error()))
+			continue
 		}
 		rows = append(rows, row)
 	}
@@ -93,6 +97,11 @@ func parseRow(row []string) (csvRow, error) {
 	if len(row) != 11 {
 		return csvRow{}, fmt.Errorf("row has %d fields, expected 11", len(row))
 	}
+	status := strings.TrimSpace(row[2])
+	if status == "Vorgemerkt" {
+		return csvRow{}, fmt.Errorf("row is not yet booked")
+	}
+
 	bookingDate, err := parseDate([]byte(row[0]))
 	if err != nil {
 		return csvRow{}, fmt.Errorf("parse booking date: %w", err)
@@ -108,7 +117,7 @@ func parseRow(row []string) (csvRow, error) {
 	return csvRow{
 		BookingDate:       bookingDate,
 		ValueDate:         valueDate,
-		Status:            row[2],
+		Status:            status,
 		Payer:             row[3],
 		Payee:             row[4],
 		Purpose:           row[5],

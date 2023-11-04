@@ -1,27 +1,90 @@
-.holder-card {
-    border: 1px solid #ddd;
-    border-radius: 4px;
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+    --accent-color: #e63946;
+}
+
+body {
+    font-family: 'Kanit', sans-serif;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 10px 10px 20px;
+    gap: 10px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+    .logo {
+        width: 4rem;
+        height: 4rem;
+        border-radius: 20%;
+        border: 4px solid black;
+        object-fit: cover;
+    }
+
+    h1 {
+        font-size: 4rem;
+        font-weight: 600; 
+    }
+}
+
+main {
+    padding: 20px 10px;
+    background-color: #fff;
+
+    .title {
+        font-size: 2rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+}
+
+.holder-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.holder-list-entry {
+    display: flex;
+    align-items: center;
     padding: 10px;
-    margin: 10px;
-    background-color: #f9f9f9;
-}
+    gap: 10px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
 
-.holder-header {
-    background-color: #f1f1f1;
-    border-bottom: 1px solid #ddd;
-    padding: 6px 10px;
-    font-weight: bold;
-}
+    
 
-.holder-body {
-    padding: 10px;
-}
+    .favorite-icon {
+        color: var(--accent-color);
+        font-size: 1.5rem;
+    }
 
-.holder-favorite {
-    color: #ff0;
-    font-weight: bold;
-}
+    .favorite-icon-false {
+        font-size: 1.5rem;
+    }
 
-.holder-favorite.false {
-    color: #ccc;
+    .holder-id {
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+
+    .holder-name {
+        font-size: 1.5rem;
+        font-weight: 300;
+        flex-grow: 1;
+    }
+
+    .holder-type {
+        font-size: 1.5rem;
+        font-weight: 300;
+    }
 }

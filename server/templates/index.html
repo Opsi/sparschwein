@@ -5,24 +5,33 @@
     <meta charset="UTF-8">
     <title>Sparschwein</title>
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    <link rel="icon" type="image/png" href="/static/favicon.png" />
+    <link rel="icon" type="image/png" href="/static/styles.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.6"
         integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous">
         </script>
 </head>
 
 <body>
-    <h1 id="title">Sparschwein</h1>
-
-    <ul>
-        {{ range . }}
-        <li>
-            <span>{{ .ID }}</span>
-            <span>{{ .Name }}</span>
-            <span>[{{ .Type }}]</span>
-        </li>
-        {{ end }}
-    </ul>
+    <header class="header">
+        <img class="logo" src="/static/favicon.png" alt="Sparschwein Logo">
+        <h1>Sparschwein</h1>
+    </header>
+    <main>
+        <h2 class="title">Holders</h2>
+        <div class="holder-list">
+            {{ range . }}
+            <div class="holder-list-entry">
+                <span class="favorite-icon{{ if not .Favorite }}-false{{end}} material-icons-sharp">
+                    star
+                </span>
+                <span class="holder-id">{{ .ID }}</span>
+                <span class="holder-name">{{ .Name }}</span>
+                <span class="holder-type">{{ .Type }}</span>
+            </div>
+            {{ end }}
+        </div>
+    </main>
 </body>
 
 </html>

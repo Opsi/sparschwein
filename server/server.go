@@ -43,6 +43,8 @@ func ListenAndServe(dbConn *sqlx.DB) error {
 		fs.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx)))
 	})
 
+	r.Mount("/htmx", htmxRouter())
+
 	return http.ListenAndServe(":8080", r)
 }
 
