@@ -1,0 +1,18 @@
+<div class="holder-card">
+    <div class="holder-header">Holder Information</div>
+    <div class="holder-body">
+        {{ if .Favorite }}
+        <div>
+            ID:
+            <span id="holder-id">{{ .ID }}</span>
+            <span class="holder-favorite">&#9733;</span>
+        </div>
+        {{ else }}
+        <div>ID: <span id="holder-id">{{ .ID }}</span></div>
+        {{ end }}
+        <div>Type: <span id="holder-type">{{ .Type }}</span></div>
+        <div>Name: <span id="holder-name">{{ .Name }}</span></div>
+        <div>Favorite:
+        </div>
+    </div>
+</div>

@@ -13,6 +13,9 @@
 
 <body>
     <h1 id="title">Sparschwein</h1>
+    {{ range . }}
+    {{ template "holderInfo.html" . }}
+    {{ end }}
 </body>
 
 </html>

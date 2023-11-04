@@ -1,3 +1,27 @@
-#title {
-    color: red;
+.holder-card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px;
+    background-color: #f9f9f9;
+}
+
+.holder-header {
+    background-color: #f1f1f1;
+    border-bottom: 1px solid #ddd;
+    padding: 6px 10px;
+    font-weight: bold;
+}
+
+.holder-body {
+    padding: 10px;
+}
+
+.holder-favorite {
+    color: #ff0;
+    font-weight: bold;
+}
+
+.holder-favorite.false {
+    color: #ccc;
 }

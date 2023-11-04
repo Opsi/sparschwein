@@ -45,3 +45,13 @@ func InsertHolder(ctx context.Context, db sqlx.ExtContext, createHolder CreateHo
 	}
 	return &holder, nil
 }
+
+func GetHolders(ctx context.Context, db sqlx.QueryerContext) ([]Holder, error) {
+	var holders []Holder
+	const query = "SELECT * FROM holders"
+	err := sqlx.SelectContext(ctx, db, &holders, query)
+	if err != nil {
+		return nil, fmt.Errorf("select holders: %w", err)
+	}
+	return holders, nil
+}

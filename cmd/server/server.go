@@ -25,12 +25,17 @@ func run() error {
 
 	// init and parse flags
 	logConfig := util.AddLogFlags()
-	_ = db.AddFlags()
+	dbConfig := db.AddFlags()
 	flag.Parse()
 
 	if err := logConfig.InitSlogDefault(); err != nil {
 		return fmt.Errorf("init slog: %w", err)
 	}
 
-	return server.ListenAndServe()
+	dbConn, err := dbConfig.OpenPingedConnection()
+	if err != nil {
+		return fmt.Errorf("open db connection: %w", err)
+	}
+
+	return server.ListenAndServe(dbConn)
 }
