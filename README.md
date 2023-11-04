@@ -1,3 +1,5 @@
+![Logo](/doc/sparschwein.png)
+
 # Sparschwein
 
 - go backend
