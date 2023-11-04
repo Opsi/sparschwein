@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -12,7 +14,16 @@ func ListenAndServe() error {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello world"))
+		tmpl, err := readTemplates()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("read templates: %s", err), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.ExecuteTemplate(w, "index.html", nil)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("execute template: %s", err), http.StatusInternalServerError)
+			return
+		}
 	})
 
 	// serve static files
@@ -25,4 +36,12 @@ func ListenAndServe() error {
 	})
 
 	return http.ListenAndServe(":8080", r)
+}
+
+func readTemplates() (*template.Template, error) {
+	tmpl, err := template.ParseGlob("server/templates/*.html")
+	if err != nil {
+		return nil, fmt.Errorf("parse templates: %w", err)
+	}
+	return tmpl, nil
 }
