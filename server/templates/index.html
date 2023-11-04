@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>Sparschwein</title>
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    <link rel="icon" type="image/png" href="/static/favicon.png"/>
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
     <script src="https://unpkg.com/htmx.org@1.9.6"
         integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous">
         </script>
@@ -13,9 +13,16 @@
 
 <body>
     <h1 id="title">Sparschwein</h1>
-    {{ range . }}
-    {{ template "holderInfo.html" . }}
-    {{ end }}
+
+    <ul>
+        {{ range . }}
+        <li>
+            <span>{{ .ID }}</span>
+            <span>{{ .Name }}</span>
+            <span>[{{ .Type }}]</span>
+        </li>
+        {{ end }}
+    </ul>
 </body>
 
 </html>
