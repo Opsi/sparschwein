@@ -10,7 +10,6 @@ import (
 	"github.com/Opsi/sparschwein/db"
 	"github.com/Opsi/sparschwein/util"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
 
 //go:embed seed.sql
